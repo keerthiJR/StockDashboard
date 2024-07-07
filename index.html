@@ -19,6 +19,7 @@
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
+            position: relative; /* For positioning the logout button */
         }
         .hidden {
             display: none;
@@ -27,6 +28,9 @@
             margin: 10px 0;
             padding: 10px;
             border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .login, .dashboard {
             display: flex;
@@ -36,22 +40,21 @@
         .login h2, .dashboard h2 {
             margin-bottom: 20px;
         }
-        .login input, .login button, .dashboard button, .dashboard select {
+        .login input, .login button, .dashboard button, .dashboard select, .dashboard input[type="number"] {
             padding: 10px;
             margin: 5px 0;
-            width: 100%;
             max-width: 300px;
             border-radius: 5px;
             border: 1px solid #ddd;
         }
-        .login button, .dashboard .subscribe-button, .dashboard .logout-button {
+        .login button, .dashboard .subscribe-button, .dashboard .logout-button, .dashboard .update-button, .dashboard .delete-button {
             background-color: #007bff;
             color: white;
             border: none;
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        .login button:hover, .dashboard .subscribe-button:hover, .dashboard .logout-button:hover {
+        .login button:hover, .dashboard .subscribe-button:hover, .dashboard .logout-button:hover, .dashboard .update-button:hover, .dashboard .delete-button:hover {
             background-color: #0056b3;
         }
         #stock-list {
@@ -59,42 +62,16 @@
             max-width: 600px;
             margin: 20px auto;
         }
-        .stock {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
+        .stock input[type="number"],
         .stock button {
-            background-color: #28a745;
-            color: white;
-            border: none;
+            margin-left: 10px;
             padding: 5px 10px;
-            cursor: pointer;
             border-radius: 5px;
-            transition: background-color 0.3s;
         }
-        .stock button:hover {
-            background-color: #218838;
-        }
-        .dashboard div {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .dashboard label, .dashboard select, .dashboard .subscribe-button, .dashboard .logout-button {
-            margin: 5px;
-        }
-        .dashboard .logout-button {
-            background-color: #dc3545;
-        }
-        .dashboard .logout-button:hover {
-            background-color: #c82333;
+        .logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
         }
     </style>
 </head>
@@ -106,6 +83,7 @@
             <button onclick="login()">Login</button>
         </div>
         <div id="dashboard" class="dashboard" style="display: none;">
+            <button class="logout-button" onclick="logout()">Logout</button>
             <h2>Stock Dashboard</h2>
             <div>
                 <label for="stocks">Subscribe to Stock: </label>
@@ -117,7 +95,6 @@
                     <option value="NVDA">NVDA</option>
                 </select>
                 <button class="subscribe-button" onclick="subscribe()">Subscribe</button>
-                <button class="logout-button" onclick="logout()">Logout</button>
             </div>
             <div id="stock-list">
                 <!-- Stock prices will be updated here -->
@@ -135,20 +112,18 @@
             const email = document.getElementById("email").value;
             if (supportedEmails.includes(email)) {
                 currentUser = email;
-                // document.getElementById("login").style.display = "none";
+                document.getElementById("login").querySelector("h2").innerText = "Welcome " + email.split("@")[0] + "!";
                 document.getElementById("login").querySelector("input").style.display = "none";
                 document.getElementById("login").querySelector("button").style.display = "none";
                 document.getElementById("dashboard").style.display = "block";
                 renderStocks();
-
             } else {
                 alert("Email not supported.");
             }
         }
 
         function logout() {
-            // document.getElementById("login").style.display = "block";
-            document.getElementById("login").querySelector("h2").innerText = "Login"
+            document.getElementById("login").querySelector("h2").innerText = "Login";
             document.getElementById("login").querySelector("input").style.display = "block";
             document.getElementById("login").querySelector("button").style.display = "block";
             document.getElementById("dashboard").style.display = "none";
@@ -160,38 +135,46 @@
             const stock = document.getElementById("stocks").value;
             if (currentUser === "user1@example.com" && !subscribedStocks1[stock]) {
                 subscribedStocks1[stock] = { price: 0 };
-                updateStockPrice(stock);
                 renderStocks();
             } else if (currentUser === "user2@example.com" && !subscribedStocks2[stock]) {
                 subscribedStocks2[stock] = { price: 0 };
-                updateStockPrice(stock);
                 renderStocks();
             }
         }
 
         function updateStockPrice(stock) {
+            const price = document.getElementById(`${stock}-input`).value;
             if (currentUser === "user1@example.com") {
-                subscribedStocks1[stock].price = (Math.random() * 1000).toFixed(2);
+                subscribedStocks1[stock].price = price;
             } else if (currentUser === "user2@example.com") {
-                subscribedStocks2[stock].price = (Math.random() * 1000).toFixed(2);
+                subscribedStocks2[stock].price = price;
             }
             renderStocks();
         }
 
+        function deleteStock(stock) {
+            if (currentUser === "user1@example.com" && subscribedStocks1.hasOwnProperty(stock)) {
+                delete subscribedStocks1[stock];
+                renderStocks();
+            } else if (currentUser === "user2@example.com" && subscribedStocks2.hasOwnProperty(stock)) {
+                delete subscribedStocks2[stock];
+                renderStocks();
+            }
+        }
+
         function renderStocks() {
-            const username = currentUser.split("@")[0];
-            document.getElementById("login").querySelector("h2").innerText = "Welcome " + username + "!";
             const stockList = document.getElementById("stock-list");
             stockList.innerHTML = "";
             const subscribedStocks = currentUser === "user1@example.com" ? subscribedStocks1 : subscribedStocks2;
             for (const [stock, data] of Object.entries(subscribedStocks)) {
                 const stockElement = document.createElement("div");
                 stockElement.className = "stock";
-                stockElement.textContent = `${stock}: $${data.price}`;
-                const updateButton = document.createElement("button");
-                updateButton.textContent = "Update";
-                updateButton.onclick = () => updateStockPrice(stock);
-                stockElement.appendChild(updateButton);
+                stockElement.innerHTML = `
+                    <div>${stock}: </div>
+                    <input type="number" id="${stock}-input" value="${data.price}" style="width: 60px;">
+                    <button class="update-button" onclick="updateStockPrice('${stock}')">Update</button>
+                    <button class="delete-button" onclick="deleteStock('${stock}')">Delete</button>
+                `;
                 stockList.appendChild(stockElement);
             }
         }
