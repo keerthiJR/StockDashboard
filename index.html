@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Broker Client Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .hidden {
+            display: none;
+        }
+        .stock {
+            margin: 10px 0;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .login, .dashboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login h2, .dashboard h2 {
+            margin-bottom: 20px;
+        }
+        .login input, .login button, .dashboard button, .dashboard select {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            max-width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .login button, .dashboard .subscribe-button, .dashboard .logout-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .login button:hover, .dashboard .subscribe-button:hover, .dashboard .logout-button:hover {
+            background-color: #0056b3;
+        }
+        #stock-list {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        .stock {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .stock button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .stock button:hover {
+            background-color: #218838;
+        }
+        .dashboard div {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .dashboard label, .dashboard select, .dashboard .subscribe-button, .dashboard .logout-button {
+            margin: 5px;
+        }
+        .dashboard .logout-button {
+            background-color: #dc3545;
+        }
+        .dashboard .logout-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="login" class="login">
+            <h2>Login</h2>
+            <input type="email" id="email" placeholder="Enter your email">
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="dashboard" class="dashboard" style="display: none;">
+            <h2>Stock Dashboard</h2>
+            <div>
+                <label for="stocks">Subscribe to Stock: </label>
+                <select id="stocks">
+                    <option value="GOOG">GOOG</option>
+                    <option value="TSLA">TSLA</option>
+                    <option value="AMZN">AMZN</option>
+                    <option value="META">META</option>
+                    <option value="NVDA">NVDA</option>
+                </select>
+                <button class="subscribe-button" onclick="subscribe()">Subscribe</button>
+                <button class="logout-button" onclick="logout()">Logout</button>
+            </div>
+            <div id="stock-list">
+                <!-- Stock prices will be updated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const supportedEmails = ["user1@example.com", "user2@example.com"];
+        let subscribedStocks1 = {};
+        let subscribedStocks2 = {};
+        let currentUser = null;
+
+        function login() {
+            const email = document.getElementById("email").value;
+            if (supportedEmails.includes(email)) {
+                currentUser = email;
+                // document.getElementById("login").style.display = "none";
+                document.getElementById("login").querySelector("input").style.display = "none";
+                document.getElementById("login").querySelector("button").style.display = "none";
+                document.getElementById("dashboard").style.display = "block";
+                renderStocks();
+
+            } else {
+                alert("Email not supported.");
+            }
+        }
+
+        function logout() {
+            // document.getElementById("login").style.display = "block";
+            document.getElementById("login").querySelector("h2").innerText = "Login"
+            document.getElementById("login").querySelector("input").style.display = "block";
+            document.getElementById("login").querySelector("button").style.display = "block";
+            document.getElementById("dashboard").style.display = "none";
+            currentUser = null;
+            document.getElementById("stock-list").innerHTML = "";
+        }
+
+        function subscribe() {
+            const stock = document.getElementById("stocks").value;
+            if (currentUser === "user1@example.com" && !subscribedStocks1[stock]) {
+                subscribedStocks1[stock] = { price: 0 };
+                updateStockPrice(stock);
+                renderStocks();
+            } else if (currentUser === "user2@example.com" && !subscribedStocks2[stock]) {
+                subscribedStocks2[stock] = { price: 0 };
+                updateStockPrice(stock);
+                renderStocks();
+            }
+        }
+
+        function updateStockPrice(stock) {
+            if (currentUser === "user1@example.com") {
+                subscribedStocks1[stock].price = (Math.random() * 1000).toFixed(2);
+            } else if (currentUser === "user2@example.com") {
+                subscribedStocks2[stock].price = (Math.random() * 1000).toFixed(2);
+            }
+            renderStocks();
+        }
+
+        function renderStocks() {
+            const username = currentUser.split("@")[0];
+            document.getElementById("login").querySelector("h2").innerText = "Welcome " + username + "!";
+            const stockList = document.getElementById("stock-list");
+            stockList.innerHTML = "";
+            const subscribedStocks = currentUser === "user1@example.com" ? subscribedStocks1 : subscribedStocks2;
+            for (const [stock, data] of Object.entries(subscribedStocks)) {
+                const stockElement = document.createElement("div");
+                stockElement.className = "stock";
+                stockElement.textContent = `${stock}: $${data.price}`;
+                const updateButton = document.createElement("button");
+                updateButton.textContent = "Update";
+                updateButton.onclick = () => updateStockPrice(stock);
+                stockElement.appendChild(updateButton);
+                stockList.appendChild(stockElement);
+            }
+        }
+    </script>
+</body>
+</html>
